@@ -3,13 +3,54 @@ from sklearn.datasets import make_classification
 from sklearn.model_selection import train_test_split
 from random import randint, random, choice, gauss
 
-X, y = make_classification(n_samples=100, random_state=1)
-X_train, X_test, y_train, y_test = train_test_split(X, y, stratify=y, random_state=1)
-clf = MLPClassifier(random_state=2, max_iter=500).fit(X_train, y_train)
-clf.predict_proba(X_test[:1])
-clf.predict(X_test[:5, :])
-clf.score(X_test, y_test)
-print(clf.score(X_test, y_test))
+
+
+def geneticAlgorithm(generatieSize, aantalIteraties, startHyperparameters):
+    generatie = [changeFunction(startHyperparameters) for _ in range(generatieSize)]
+    for _ in range(aantalIteraties):
+        scores = [(runNeuralNetwork(x), x) for x in generatie]
+        scores.sort(key = (lambda x: x[0]))                                                         #sorteert het linkerdeel van de tuple en zet deze in een volgorde
+        nieuweGeneratie = []
+        for _ in range(generatieSize):
+            daddy = scores[random.randint(0, random.randint(0, generatieSize-1))][1]                #pakt rechterdeel van een random tuple in scores (de hyperparameters)
+            mommy = scores[random.randint(0, random.randint(0, generatieSize-1))][1]
+            timmie = crossOver(daddy, mommy)
+            timmie = changeFunction(timmie)
+            nieuweGeneratie.append(timmie)
+        generatie = nieuweGeneratie
+    scores = [(runNeuralNetwork(x), x) for x in generatie]
+    scores.sort(key = (lambda x: x[0]))
+    return scores[0]
+
+def crossOver(daddy: dict, mommy: dict):
+    timmie = {}
+    for key in daddy.keys():
+        if randint(0, 1) == 1:
+            timmie[key] = daddy[key]
+        else:
+            timmie[key] = mommy[key]
+    return timmie
+
+
+
+
+
+
+#Maakt functie voor het runnen van het neurale netwerk volgens code site
+
+def runNeuralNetwork(hyperParameters: dict):
+    X, y = make_classification(n_samples=100, random_state=1)
+    X_train, X_test, y_train, y_test = train_test_split(X, y, stratify=y, random_state=1)
+    clf = MLPClassifier(
+        hidden_layer_sizes = hyperParameters["hidden_layer_sizes"], 
+        activation = hyperParameters["activation"],
+        alpha = hyperParameters["alpha"],
+        learning_rate_init = hyperParameters["learning_rate_init"],
+        max_iter = hyperParameters["max_iter"]
+        ).fit(X_train, y_train)
+    clf.predict_proba(X_test[:1])
+    clf.predict(X_test[:5, :])
+    return clf.score(X_test, y_test)
 
 #Maakt functie voor verandering van de hyper-parameters.
 
@@ -42,18 +83,20 @@ def changeFunction(hyperParameters: dict):
         output["learning_rate_init"] += gauss(0, 0.01)
 
     elif parameterToChange == 5:
-        
+        if output["max_iter"] < 100:
+            output["max_iter"] += randint(1, 5)                         # als < 100 dan een getal tussen 1 en 5 optellen
+        elif output["max_iter"] > 300:
+            output["max_iter"] += randint(-5, -1)                       # als > 300 dan een getal tussen -1 en -5 optellen
+        else:
+            output["max_iter"] += randint(-5, 5)
 
-    elif parameterToChange == 6:
+    return output
 
-
-
-hyperParamaters = {
+hyperParameters = {
     "hidden_layer_sizes": (100, ),
     "activation": "relu",
     "alpha": 0.0001,
     "learning_rate_init": 0.001,
-    "batch_size": "auto",
     "max_iter": 200
 }
 hyperParameters.max_iter
