@@ -64,7 +64,7 @@ def runNeuralNetwork(hyperParameters: dict):
 
 def changeFunction(hyperParameters: dict):
     output = hyperParameters.copy()
-    parameterToChange = randint(1, 6)                                                                               #past aantal parameters aan
+    parameterToChange = randint(1, 5)                                                                               #past aantal parameters aan
     if parameterToChange == 1:
         if len(output["hidden_layer_sizes"]) < 5 and randint(1, 2) == 1:                                            #past aantal layers aan
             output["hidden_layer_sizes"] = tuple(list(hyperParameters["hidden_layer_sizes"]) + [randint(3, 70)])           #voegt layers toe met een range van een grootte van nodes
